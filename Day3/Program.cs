@@ -15,12 +15,12 @@ namespace Day3
             Console.ReadKey();
         }
 
-        static ulong calcPattern(int left, int down, string[] forest)
+        static ulong calcPattern(int right, int down, string[] forest)
         {
             ulong count = 0;
             for (var i = 0; i < forest.Length; i += down)
             {
-                if (forest[i][(i / down * left) % forest[i].Length] != '.')
+                if (forest[i][(i / down * right) % forest[i].Length] != '.')
                     ++count;
             }
             return count;
