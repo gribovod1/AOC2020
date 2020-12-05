@@ -7,7 +7,7 @@ namespace Day1
     {
         static void Main(string[] args)
         {
-            var ss = File.ReadAllText(@"D:\data.txt").Split(Environment.NewLine);
+            var ss = File.ReadAllText("data.txt").Split(Environment.NewLine);
             var nums = new int[ss.Length];
             for (var i = 0; i < ss.Length; i++)
             {
