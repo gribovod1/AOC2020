@@ -12,41 +12,26 @@ namespace AOC2020
             var lines = File.ReadAllLines("data_day5.txt");
             var countOne = 0;
             var ids = new HashSet<int>();
-            for(var i=8; i < 128 * 8 - 8;++i)
+            for (var i = 0; i < 1024; ++i)
                 ids.Add(i);
             foreach (var s in lines)
             {
-                int col = getValue(s.Substring(0, 7), 0, 127);
-                int row = getValue(s.Substring(7, 3), 0, 7);
-                int curr = col * 8 + row;
-                if (countOne < curr)
-                    countOne = curr;
-                ids.Remove(curr);
+                int id = Convert.ToInt32(s.Replace('B', '1').Replace('L', '1').Replace('F', '0').Replace('R', '0'), 2);
+                if (countOne < id)
+                    countOne = id;
+                ids.Remove(id);
             }
             Console.WriteLine($"countOne: {countOne}");
-            foreach(var id in ids)
+            var prev = 0;
+            foreach (var id in ids)
             {
-                Console.WriteLine($"id: {id}");
+                if (id > prev + 1)
+                    Console.WriteLine($"id: {id}");
+                prev = id;
             }
             if (Console.ReadKey().Key == ConsoleKey.Spacebar)
             {
                 Clipboard.SetText(countOne.ToString());
-            }
-        }
-
-        public static int getValue(string path, int start, int end)
-        {
-            if (path[0] == 'F' || path[0] == 'L')
-            {
-                if (path.Length == 1)
-                    return start;
-                return getValue(path.Substring(1, path.Length - 1), start, start + (end - start) / 2);
-            }
-            else
-            {
-                if (path.Length == 1)
-                    return end;
-                return getValue(path.Substring(1, path.Length - 1), start + (end - start) / 2 + 1, end);
             }
         }
     }
