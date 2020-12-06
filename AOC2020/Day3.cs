@@ -2,11 +2,11 @@
 using System;
 using System.IO;
 
-namespace Day3
+namespace AOC2020
 {
-    class Program
+    class Day3
     {
-        static void Main(string[] args)
+        static void exec()
         {
             var lines = File.ReadAllLines("data.txt");
             ulong count = calcPattern(1, 1, lines) * calcPattern(3, 1, lines) * calcPattern(5, 1, lines) * calcPattern(7, 1, lines) * calcPattern(1, 2, lines);

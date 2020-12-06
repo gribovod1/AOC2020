@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Day1
+namespace AOC2020
 {
-    class Program
+    class Day1
     {
-        static void Main(string[] args)
+        static void exec()
         {
-            var ss = File.ReadAllText("data.txt").Split(Environment.NewLine);
+            var ss = File.ReadAllText("data.txt").Split(new string[] { Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
             var nums = new int[ss.Length];
             for (var i = 0; i < ss.Length; i++)
             {
@@ -25,7 +29,6 @@ namespace Day1
                     }
                 }
             }
-            
         }
     }
 }

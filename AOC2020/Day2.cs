@@ -3,11 +3,11 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace Day2
+namespace AOC2020
 {
-    class Program
+    class Day2
     {
-        static void Main(string[] args)
+        static void exec()
         {
             var passwords = File.ReadAllLines("data.txt");
             var countOne = 0;
@@ -28,7 +28,7 @@ namespace Day2
                 if ((pass[firstNumber - 1] == symbol) ^ (pass[secondNumber - 1] == symbol))
                     ++countTwo;
             }
-            Console.WriteLine($"Part One: {countOne} Part Two: {countTwo}");                       
+            Console.WriteLine($"Part One: {countOne} Part Two: {countTwo}");
             Clipboard.SetText(countTwo.ToString());
             Console.ReadKey();
         }

@@ -3,17 +3,17 @@ using System;
 using System.Globalization;
 using System.IO;
 
-namespace Day4
+namespace AOC2020
 {
-    class Program
+    class Day4
     {
-        static void Main(string[] args)
+        static void exec()
         {
             var lines = File.ReadAllText("data.txt");
             var ps = lines.Split(new string[] { Environment.NewLine + Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             var countOne = 0;
             var countTwo = 0;
-            for (var i=0;i < ps.Length;++i)
+            for (var i = 0; i < ps.Length; ++i)
             {
                 if (ps[i].IndexOf("byr:") >= 0 &&
                     ps[i].IndexOf("iyr:") >= 0 &&
@@ -36,7 +36,8 @@ namespace Day4
 
         static bool check(string[] ss)
         {
-            for (var f = 0; f < ss.Length; ++f) {
+            for (var f = 0; f < ss.Length; ++f)
+            {
                 var fn = ss[f].Split(':');
                 switch (fn[0])
                 {

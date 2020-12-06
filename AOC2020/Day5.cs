@@ -9,7 +9,7 @@ namespace AOC2020
     {
         public static void exec()
         {
-            var lines = File.ReadAllLines("data_day5.txt");
+            var lines = File.ReadAllLines(@"Data\day5.txt");
             var countOne = 0;
             var ids = new HashSet<int>();
             for (var i = 0; i < 1024; ++i)
