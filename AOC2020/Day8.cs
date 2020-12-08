@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 
 namespace AOC2020
 {
@@ -10,93 +9,128 @@ namespace AOC2020
     {
         public static void exec()
         {
-            var rules = File.ReadAllLines(@"Data\day8.txt");
-            var one = partOne(rules);
-            var two = partTwo(rules);
+            var commands = File.ReadAllLines(@"Data\day8.txt");
+            var one = partOne(commands);
+            var two = partTwo(commands);
 
             Console.WriteLine($"partOne: {one} partTwo: {two}");
             if (Console.ReadKey().Key == ConsoleKey.Spacebar)
                 Clipboard.SetText(two.ToString());
         }
 
-        public static int partOne(string[] rules)
+        public class Command
         {
-            var s = new HashSet<string>();
-            var containBags = new HashSet<string>();
-            containBags.Add("shiny gold");
-            var added = 0;
+            public string command;
+            public int arg;
+            public int count;
+        }
+
+        public static int partOne(string[] commands)
+        {
+            var cs = new List<Command>();
+            foreach (var c in commands)
+            {
+                var sc = c.Split(' ');
+                var nC = new Command { command = sc[0], arg = int.Parse(sc[1]), count = 0 };
+                cs.Add(nC);
+            }
+            var accumulator = 0;
+            var cAddr = 0;
+            accumulator = 0;
+            cAddr = 0;
+            while (cAddr < cs.Count && cs[cAddr].count == 0)
+            {
+                ++cs[cAddr].count;
+                switch (cs[cAddr].command)
+                {
+                    case "nop":
+                        {
+                            ++cAddr;
+                            break;
+                        }
+                    case "jmp":
+                        {
+                            cAddr += cs[cAddr].arg;
+                            break;
+                        }
+                    case "acc":
+                        {
+                            accumulator += cs[cAddr].arg;
+                            ++cAddr;
+                            break;
+                        }
+                }
+            }
+            return accumulator;
+        }
+
+        public static int partTwo(string[] commands)
+        {
+            var cs = new List<Command>();
+            foreach (var c in commands)
+            {
+                var sc = c.Split(' ');
+                var nC = new Command { command = sc[0], arg = int.Parse(sc[1]), count = 0 };
+                cs.Add(nC);
+            }
+            var lastMod = -1;
+            var accumulator = 0;
+            var cAddr = 0;
             do
             {
-                added = 0;
-                foreach (var r in rules)
+                foreach (var c in cs)
+                    c.count = 0;
+                if (lastMod >= 0)
                 {
-                    var bags = Regex.Replace(r, "[0-9]", "", RegexOptions.IgnoreCase).Split(new string[] { ",", " contain ", ".", " bags", " bag" }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var b in bags)
+                    if (cs[lastMod].command == "jmp")
+                        cs[lastMod].command = "nop";
+                    else
+                        cs[lastMod].command = "jmp";
+                }
+                for (var cIndex = lastMod + 1; cIndex < cs.Count; ++cIndex)
+                {
+                    if (cs[cIndex].command == "jmp")
                     {
-                        var t = b.Trim();
-                        if (containBags.Contains(t))
-                        {
-                            if (s.Add(bags[0]))
+                        cs[cIndex].command = "nop";
+                        lastMod = cIndex;
+                        break;
+                    }
+                    else if (cs[cIndex].command == "nop")
+                    {
+                        cs[cIndex].command = "jmp";
+                        lastMod = cIndex;
+                        break;
+                    }
+                }
+
+                accumulator = 0;
+                cAddr = 0;
+                while (cAddr < cs.Count && cs[cAddr].count == 0)
+                {
+                    ++cs[cAddr].count;
+                    switch (cs[cAddr].command)
+                    {
+                        case "nop":
                             {
-                                containBags.Add(bags[0]);
-                                added++;
+                                ++cAddr;
+                                break;
                             }
-                        }
-                    }
-                }
-            } while (added > 0);
-            s.Remove("shiny gold");
-            return s.Count;
-        }
-
-        class Bag
-        {
-            List<KeyValuePair<string, int>> Bags;
-
-            public Bag(string containBags)
-            {
-                Bags = new List<KeyValuePair<string, int>>();
-                var bags = containBags.Split(new string[] { ",", " contain ", ".", " bags", " bag" }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var b in bags)
-                {
-                    var numBag = b.Trim();
-                    var index = numBag.IndexOf(" ");
-                    if (int.TryParse(numBag.Substring(0, index), out int count))
-                    {
-                        var bag = numBag.Substring(index + 1, numBag.Length - index - 1);
-                        Bags.Add(new KeyValuePair<string, int>(bag, count));
+                        case "jmp":
+                            {
+                                cAddr += cs[cAddr].arg;
+                                break;
+                            }
+                        case "acc":
+                            {
+                                accumulator += cs[cAddr].arg;
+                                ++cAddr;
+                                break;
+                            }
                     }
                 }
             }
-
-            public int Summary(Dictionary<string, Bag> bags)
-            {
-                int result = 0;
-                foreach (var b in Bags)
-                {
-                    result += (bags[b.Key].Summary(bags) + 1) * b.Value;
-                }
-                return result;
-            }
-        }
-
-        public static int partTwo(string[] rules)
-        {
-            var bags = new Dictionary<string, Bag>();
-            Bag sgold = null;
-            foreach (var r in rules)
-            {
-                var ss = " bags contain";
-                var startIndex = r.IndexOf(ss);
-                if (startIndex > 0)
-                {
-                    var b = new Bag(r.Substring(startIndex + ss.Length, r.Length - startIndex - ss.Length));
-                    bags.Add(r.Substring(0, startIndex), b);
-                    if (r.IndexOf("shiny gold") == 0)
-                        sgold = b;
-                }
-            }
-            return sgold.Summary(bags);
+            while (cAddr < cs.Count);
+            return accumulator;
         }
     }
 }
