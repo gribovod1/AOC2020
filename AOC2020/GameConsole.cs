@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AOC2020
@@ -24,7 +25,9 @@ namespace AOC2020
 
         public int CommandAddress { get; private set; }
         public int Accumulator { get; private set; }
+        public int ExitCode { get; private set; }
         public List<Command> CurrentProgram { get; private set; }
+        public List<int> LogCurrentProgram { get; private set; }
 
         public void LoadProgramFromFile(string path)
         {
@@ -36,17 +39,24 @@ namespace AOC2020
 
         public void Reset()
         {
+            LogCurrentProgram = new List<int>();
             CommandAddress = 0;
             Accumulator = 0;
             foreach (var command in CurrentProgram)
                 command.count = 0;
         }
 
+        /// <summary>
+        /// Выполняет текущую программу
+        /// </summary>
+        /// <param name="terminate">Проверяет, надо ли прервать программу ПЕРЕД выполнением текущей команды.</param>
+        /// <returns>false - если программа была прервана пользователем, вышла за пределы программы или из-за ошибки выполнения, true - если был выполнен выход по команде ret</returns>
         public bool Run(CheckTerminate terminate)
         {
             Reset();
             while (CommandAddress < CurrentProgram.Count && !terminate())
             {
+                LogCurrentProgram.Add(CommandAddress);
                 ++CurrentProgram[CommandAddress].count;
                 switch (CurrentProgram[CommandAddress].command)
                 {
@@ -66,9 +76,15 @@ namespace AOC2020
                             ++CommandAddress;
                             break;
                         }
+                    case "ret":
+                        {
+                            ExitCode = CurrentProgram[CommandAddress].arg;
+                            Console.WriteLine($"ExitCode: {ExitCode}");
+                            return true;
+                        }
                 }
             }
-            return CommandAddress >= CurrentProgram.Count;
+            return false;
         }
     }
 }

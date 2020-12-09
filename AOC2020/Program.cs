@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            Day8.Exec();
+            Day9.Exec();
         }
     }
 }
