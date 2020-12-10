@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AOC2020
 {
@@ -11,7 +7,7 @@ namespace AOC2020
     {
         static void exec()
         {
-            var ss = File.ReadAllText("data.txt").Split(new string[] { Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
+            var ss = File.ReadAllText(@"Data\day1.txt").Split(new string[] { Environment.NewLine },StringSplitOptions.RemoveEmptyEntries);
             var nums = new int[ss.Length];
             for (var i = 0; i < ss.Length; i++)
             {
