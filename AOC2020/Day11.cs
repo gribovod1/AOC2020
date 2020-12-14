@@ -1,8 +1,6 @@
 ﻿using AOC;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace AOC2020
 {
@@ -71,15 +69,29 @@ namespace AOC2020
         int countFree(string[] numbersText, int y, int x)
         {
             var result = 0;
-            result += y == 0 || x == 0 || numbersText[y - 1][x - 1] != '#' ? 1 : 0;
-            result += y == 0 || numbersText[y - 1][x] != '#' ? 1 : 0;
-            result += y == 0 || x == numbersText[y].Length - 1 || numbersText[y - 1][x + 1] != '#' ? 1 : 0;
-            result += x == 0 || numbersText[y][x - 1] != '#' ? 1 : 0;
-            result += x == numbersText[y].Length - 1 || numbersText[y][x + 1] != '#' ? 1 : 0;
-            result += y == numbersText.Length - 1 || x == 0 || numbersText[y + 1][x - 1] != '#' ? 1 : 0;
-            result += y == numbersText.Length - 1 || numbersText[y + 1][x] != '#' ? 1 : 0;
-            result += y == numbersText.Length - 1 || x == numbersText[y].Length - 1 || numbersText[y + 1][x + 1] != '#' ? 1 : 0;
+            result += isFree(numbersText, y - 1, x - 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y, x - 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x - 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x + 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y, x + 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y - 1, x + 1, 0, 0) ? 1 : 0;
+            result += isFree(numbersText, y - 1, x, 0, 0) ? 1 : 0;
             return result;
+        }
+
+        bool isFree(string[] numbersText, int y, int x, int dy, int dx)
+        {
+            if (y < 0 ||
+                x < 0 ||
+                y >= numbersText.Length ||
+                x >= numbersText[y].Length ||
+                numbersText[y][x] == 'L')
+                return true;
+            if (numbersText[y][x] == '#') return false;
+            if (dy == 0 && dx == 0)
+                return true;
+            return isFree(numbersText, y + dy, x + dx, dy, dx);
         }
 
         public int partTwo(string[] numbersText)
@@ -118,7 +130,7 @@ namespace AOC2020
                     else if (numbersText[y][x] == '#')
                     {
                         var p = 8 - countFreeLine(numbersText, y, x);
-                        if (p >= 5 )
+                        if (p >= 5)
                         {
                             places[y] += 'L';
                             mod = true;
@@ -134,27 +146,15 @@ namespace AOC2020
         int countFreeLine(string[] numbersText, int y, int x)
         {
             var result = 0;
-            result += isFree(numbersText, y-1, x-1, -1, -1) ? 1 : 0;
-            result += isFree(numbersText, y, x-1, 0, -1) ? 1 : 0;
-            result += isFree(numbersText, y+1, x-1, 1, -1) ? 1 : 0;
-            result += isFree(numbersText, y+1, x, 1, 0) ? 1 : 0;
-            result += isFree(numbersText, y+1, x+1, 1, 1) ? 1 : 0;
-            result += isFree(numbersText, y, x+1, 0, 1) ? 1 : 0;
-            result += isFree(numbersText, y-1, x+1, -1, 1) ? 1 : 0;
-            result += isFree(numbersText, y-1, x, -1, 0) ? 1 : 0;
+            result += isFree(numbersText, y - 1, x - 1, -1, -1) ? 1 : 0;
+            result += isFree(numbersText, y, x - 1, 0, -1) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x - 1, 1, -1) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x, 1, 0) ? 1 : 0;
+            result += isFree(numbersText, y + 1, x + 1, 1, 1) ? 1 : 0;
+            result += isFree(numbersText, y, x + 1, 0, 1) ? 1 : 0;
+            result += isFree(numbersText, y - 1, x + 1, -1, 1) ? 1 : 0;
+            result += isFree(numbersText, y - 1, x, -1, 0) ? 1 : 0;
             return result;
-        }
-
-        bool isFree(string[] numbersText, int y, int x, int dy, int dx)
-        {
-            if (y < 0 ||
-                x < 0 ||
-                y >= numbersText.Length ||
-                x >= numbersText[y].Length)
-                return true;
-            if (numbersText[y][x] == 'L') return true;
-            if (numbersText[y][x] == '#') return false;
-            return isFree(numbersText, y + dy, x + dx, dy, dx);
         }
     }
 }
