@@ -57,6 +57,7 @@
     <Compile Include="Day19.cs" />
     <Compile Include="Day2.cs" />
     <Compile Include="Day20.cs" />
+    <Compile Include="Day21.cs" />
     <Compile Include="Day3.cs" />
     <Compile Include="Day4.cs" />
     <Compile Include="Day5.cs" />
@@ -74,6 +75,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\day1.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\day21.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Data\day20.txt">

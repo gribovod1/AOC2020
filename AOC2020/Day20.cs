@@ -8,11 +8,19 @@ namespace AOC2020
 {
     public class Tile
     {
-        public Dictionary<int,Tile> Neirb = new Dictionary<int, Tile>();
+        public Dictionary<BoardSide,Tile> Neirb = new Dictionary<BoardSide, Tile>();
         public ulong Id;
         public List<string> Data = new List<string>();
         public int Rotate;
-        public int Flip;
+        public bool Flip;
+
+        public enum BoardSide
+        {
+            Right = 1,
+            Up,
+            Left,
+            Down
+        }
 
         public Tile(string text)
         {
@@ -25,45 +33,45 @@ namespace AOC2020
                 Data.Add(ss[s]);
         }
 
-        List<string> UpBoards()
+        List<KeyValuePair<string,BoardSide>> UpBoards()
         {
-            var result = new List<string>();
-            result.Add(Data[0]);
+            var result = new List<KeyValuePair<string, BoardSide>>();
+            result.Add(new KeyValuePair<string, BoardSide>(Data[0],BoardSide.Up));
             var left = new StringBuilder();
             for (var i = Data.Count - 1; i >= 0; --i)
                 left.Append(Data[i][0]);
-            result.Add(left.ToString());
-            var right = new StringBuilder();
-            for (var i = 0; i < Data.Count; ++i)
-                right.Append(Data[i][Data[i].Length - 1]);
-            result.Add(right.ToString());
+            result.Add(new KeyValuePair<string, BoardSide>(left.ToString(),BoardSide.Left));
             var down = new StringBuilder();
             for (var i = Data.Count - 1; i >= 0; --i)
                 down.Append(Data[Data.Count - 1][i]);
-            result.Add(down.ToString());
+            result.Add(new KeyValuePair<string, BoardSide>(down.ToString(),BoardSide.Down));
+            var right = new StringBuilder();
+            for (var i = 0; i < Data.Count; ++i)
+                right.Append(Data[i][Data[i].Length - 1]);
+            result.Add(new KeyValuePair<string, BoardSide>(right.ToString(),BoardSide.Right));
             return result;
         }
 
-        List<string> DownBoards()
+        List<KeyValuePair<string, BoardSide>> DownBoards()
         {
-            var result = new List<string>();
-            result.Add(Data[Data.Count - 1]);
+            var result = new List<KeyValuePair<string, BoardSide>>();
+            result.Add(new KeyValuePair<string, BoardSide>(Data[Data.Count - 1],BoardSide.Down));
             var left = new StringBuilder();
             for (var i = Data.Count - 1; i >= 0; --i)
                 left.Append(Data[i][Data[i].Length - 1]);
-            result.Add(left.ToString());
+            result.Add(new KeyValuePair<string, BoardSide>(left.ToString(),BoardSide.Left));
+            var up = new StringBuilder();
+            for (var i = Data.Count - 1; i >= 0; --i)
+                up.Append(Data[0][i]);
+            result.Add(new KeyValuePair<string, BoardSide>(up.ToString(),BoardSide.Up));
             var right = new StringBuilder();
             for (var i = 0; i < Data.Count; ++i)
                 right.Append(Data[i][0]);
-            result.Add(right.ToString());
-            var down = new StringBuilder();
-            for (var i = Data.Count - 1; i >= 0; --i)
-                down.Append(Data[0][i]);
-            result.Add(down.ToString());
+            result.Add(new KeyValuePair<string, BoardSide>(right.ToString(),BoardSide.Right));
             return result;
         }
 
-        public bool isNeirb(Tile other)
+        public bool IsNeirb(Tile other)
         {
             if (other == this) return false;
             if (Neirb.ContainsValue(other))
@@ -74,21 +82,32 @@ namespace AOC2020
             for (var dIndex = 0; dIndex < db.Count; ++dIndex)
             {
                 for (var oU = 0; oU < otherUp.Count; ++oU)
-                    if (otherUp[oU] == db[dIndex])
+                    if (otherUp[oU].Key == db[dIndex].Key)
                     {
-                        Neirb.Add(other);
-                        other.Neirb.Add(this);
+                        Neirb.Add(db[dIndex].Value, other);
+                        other.Neirb.Add(calcOtherSide(dIndex, db[dIndex].Value, oU),this);
                         return true;
                     }
                 for (var oD = 0; oD < otherDown.Count; ++oD)
-                    if (otherDown[oD] == db[dIndex])
+                    if (otherDown[oD].Key == db[dIndex].Key)
                     {
-                        Neirb.Add(other);
-                        other.Neirb.Add(this);
+                        Neirb.Add(db[dIndex].Value, other);
+                        other.Neirb.Add(calcOtherSide(dIndex, db[dIndex].Value, oD), this);
+                        other.Flip = true;
                         return true;
                     }
             }
             return false;
+        }
+
+        BoardSide calcOtherSide(int board, BoardSide side, int otherBoard)
+        {
+            throw new Exception("");
+        }
+
+        int calcRotate()
+        {
+            return 0;
         }
 
         public void TrimBoards()
@@ -101,23 +120,33 @@ namespace AOC2020
 
         public void Transform()
         {
-
-        }
-
-        void addTile(List<List<char>> image, int x, int y)
-        {
-            for (var yData = 0; yData < Data.Count; ++yData)
+            var newData = new List<string>();
+            for (var row = 0; row < Data.Count; ++row)
             {
-                var s = image[y * Data.Count + yData];
-                for (var xData = 0; xData < Data[yData].Length; ++xData)
-                {
-                    s[x * Data[0].Length + xData] = Data[yData][xData];
-                }
+                var sb = new StringBuilder();
+                for (var col = 0; col < Data[0].Length; ++col)
+                    if (Flip)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                newData.Add(sb.ToString());
             }
         }
+
+        public void addTile(char[,] image, int x, int y)
+        {
+            for (var yData = 0; yData < Data.Count; ++yData)
+                for (var xData = 0; xData < Data[yData].Length; ++xData)
+                    image[y * Data.Count + yData,x * Data[0].Length + xData] = Data[yData][xData];
+        }
+
         public bool isLeftUp()
         {
-            return !Neirb.ContainsKey(2) && !Neirb.ContainsKey(3);
+            return !Neirb.ContainsKey(BoardSide.Up) && !Neirb.ContainsKey(BoardSide.Left);
         }
     }
 
@@ -144,7 +173,7 @@ namespace AOC2020
             ulong result = 1;
             for (var i = 0; i < Tiles.Count-1; ++i)
                 for (var j = i+1; j < Tiles.Count; ++j)
-                    Tiles[i].isNeirb(Tiles[j]);
+                    Tiles[i].IsNeirb(Tiles[j]);
 
             for (var i = 0; i < Tiles.Count; ++i)
                 if (Tiles[i].Neirb.Count == 2)
@@ -157,23 +186,28 @@ namespace AOC2020
         {
             ulong result = 0;
             var image = GetImage();
-
-
-            return result;
+            var height = CalcHeight() * Tiles[0].Data.Count;
+            var width = CalcWidth() * Tiles[0].Data[0].Length;
+            Console.WriteLine("IMAGE:");
+            for (var y = 0; y < height; ++y)
+            {
+                for (var x = 0; x < height; ++x)
+                    Console.Write(image[x,y]);
+                Console.WriteLine();
+            }
+                    return result;
         }
 
-        List<string> GetImage()
+        char[,] GetImage()
         {
             for (var i = 0; i < Tiles.Count; ++i)
             {
                 Tiles[i].TrimBoards();
                 Tiles[i].Transform();
             }
-            var result = new List<List<char>>();
             var height = CalcHeight();
             var width = CalcWidth();
-            for (var row = 0; row < height * Tiles[0].Data.Count; ++row)
-                result.Add(new string('.', width * Tiles[0].Data[0].Length));
+            var result = new char[width * Tiles[0].Data[0].Length, height * Tiles[0].Data.Count];
 
             var startRowTile = FindLeftUp();
             for (var row = 0; row < height; ++row)
@@ -181,10 +215,10 @@ namespace AOC2020
                 Tile currTile = startRowTile;
                 for (var col = 0; col < width; ++col)
                 {
-                    addTile(result, currTile, row, col);
-                    currTile = currTile.Neirb[1];
+                    currTile.addTile(result, row, col);
+                    currTile = currTile.Neirb[Tile.BoardSide.Right];
                 }
-                startRowTile = startRowTile.Neirb[4];
+                startRowTile = startRowTile.Neirb[Tile.BoardSide.Down];
             }
             return result;
         }
@@ -201,10 +235,10 @@ namespace AOC2020
         {
             var tile = FindLeftUp();
             var result = 0;
-            while(tile.Neirb.ContainsKey(1))
+            while(tile.Neirb.ContainsKey(Tile.BoardSide.Right))
             {
                 ++result;
-                tile = tile.Neirb[1];
+                tile = tile.Neirb[Tile.BoardSide.Right];
             }
             return result;
         }
@@ -213,10 +247,10 @@ namespace AOC2020
         {
             var tile = FindLeftUp();
             var result = 0;
-            while (tile.Neirb.ContainsKey(4))
+            while (tile.Neirb.ContainsKey(Tile.BoardSide.Down))
             {
                 ++result;
-                tile = tile.Neirb[4];
+                tile = tile.Neirb[Tile.BoardSide.Down];
             }
             return result;
         }
