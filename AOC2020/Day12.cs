@@ -16,7 +16,7 @@ namespace AOC2020
 
             Console.WriteLine($"partOne: {one} partTwo: {two}");
             if (Console.ReadKey().Key == ConsoleKey.Spacebar)
-                Clipboard.SetText(one.ToString());
+                Clipboard.SetText(two.ToString());
         }
 
         public long partOne(string[] commandsText)
@@ -37,7 +37,7 @@ namespace AOC2020
                         }
                     case 'W':
                         {
-                            x += value;
+                            x -= value;
                             break;
                         }
                     case 'S':
@@ -47,7 +47,7 @@ namespace AOC2020
                         }
                     case 'E':
                         {
-                            x -= value;
+                            x += value;
                             break;
                         }
                     case 'R':
@@ -66,8 +66,8 @@ namespace AOC2020
                         }
                     case 'F':
                         {
-                            x += (int)(Math.Cos(angle * (Math.PI / 180)) * value);
-                            y += (int)(Math.Sin(angle * (Math.PI / 180)) * value);
+                            x += (int)(Math.Cos(angle * Math.PI / 180) * value);
+                            y += (int)(Math.Sin(angle * Math.PI / 180) * value);
                             break;
                         }
                 }
@@ -76,10 +76,64 @@ namespace AOC2020
             return Math.Abs(x)+Math.Abs(y);
         }
 
-        public int partTwo(string[] numbersText)
+        public long partTwo(string[] commandsText)
         {
-            var result = 0;
-            return result;
+            long px = 10;
+            long py = 1;
+            long x = 0;
+            long y = 0;
+            foreach (var c in commandsText)
+            {
+                var d = c[0];
+                var value = int.Parse(c.Substring(1, c.Length - 1));
+                switch (d)
+                {
+                    case 'N':
+                        {
+                            py += value;
+                            break;
+                        }
+                    case 'W':
+                        {
+                            px -= value;
+                            break;
+                        }
+                    case 'S':
+                        {
+                            py -= value;
+                            break;
+                        }
+                    case 'E':
+                        {
+                            px += value;
+                            break;
+                        }
+                    case 'R':
+                        {
+                            var tx =(int)Math.Round(Math.Cos(value * Math.PI / 180) * px + Math.Sin(value * Math.PI / 180) * py);
+                            var ty = (int)Math.Round(-Math.Sin(value * Math.PI / 180) * px + Math.Cos(value * Math.PI / 180) * py);
+                            px = tx;
+                            py = ty;
+                            break;
+                        }
+                    case 'L':
+                        {
+                            var tx = (int)Math.Round(Math.Cos(value * Math.PI / 180) * px - Math.Sin(value * Math.PI / 180) * py);
+                            var ty = (int)Math.Round(Math.Sin(value * Math.PI / 180) * px + Math.Cos(value * Math.PI / 180) * py);
+                            px = tx;
+                            py = ty;
+                            break;
+                        }
+                    case 'F':
+                        {
+                            x += px * value;
+                            y += py *value;
+                            break;
+                        }
+                }
+            }
+
+            return Math.Abs(x) + Math.Abs(y);
         }
     }
 }

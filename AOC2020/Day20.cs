@@ -3,24 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace AOC2020
 {
     public class Tile
     {
-        public Dictionary<BoardSide,Tile> Neirb = new Dictionary<BoardSide, Tile>();
-        public ulong Id;
-        public List<string> Data = new List<string>();
-        public int Rotate;
-        public bool Flip;
-
         public enum BoardSide
         {
-            Right = 1,
-            Up,
-            Left,
-            Down
+            Up, Left, Down, Right, None
         }
+
+        public Dictionary<BoardSide, Tile> Neighbours = new Dictionary<BoardSide, Tile>();
+        public ulong Id;
+        public List<string> Data = new List<string>();
 
         public Tile(string text)
         {
@@ -33,120 +29,163 @@ namespace AOC2020
                 Data.Add(ss[s]);
         }
 
-        List<KeyValuePair<string,BoardSide>> UpBoards()
+        void Rotate()
         {
-            var result = new List<KeyValuePair<string, BoardSide>>();
-            result.Add(new KeyValuePair<string, BoardSide>(Data[0],BoardSide.Up));
-            var left = new StringBuilder();
-            for (var i = Data.Count - 1; i >= 0; --i)
-                left.Append(Data[i][0]);
-            result.Add(new KeyValuePair<string, BoardSide>(left.ToString(),BoardSide.Left));
-            var down = new StringBuilder();
-            for (var i = Data.Count - 1; i >= 0; --i)
-                down.Append(Data[Data.Count - 1][i]);
-            result.Add(new KeyValuePair<string, BoardSide>(down.ToString(),BoardSide.Down));
-            var right = new StringBuilder();
-            for (var i = 0; i < Data.Count; ++i)
-                right.Append(Data[i][Data[i].Length - 1]);
-            result.Add(new KeyValuePair<string, BoardSide>(right.ToString(),BoardSide.Right));
-            return result;
-        }
-
-        List<KeyValuePair<string, BoardSide>> DownBoards()
-        {
-            var result = new List<KeyValuePair<string, BoardSide>>();
-            result.Add(new KeyValuePair<string, BoardSide>(Data[Data.Count - 1],BoardSide.Down));
-            var left = new StringBuilder();
-            for (var i = Data.Count - 1; i >= 0; --i)
-                left.Append(Data[i][Data[i].Length - 1]);
-            result.Add(new KeyValuePair<string, BoardSide>(left.ToString(),BoardSide.Left));
-            var up = new StringBuilder();
-            for (var i = Data.Count - 1; i >= 0; --i)
-                up.Append(Data[0][i]);
-            result.Add(new KeyValuePair<string, BoardSide>(up.ToString(),BoardSide.Up));
-            var right = new StringBuilder();
-            for (var i = 0; i < Data.Count; ++i)
-                right.Append(Data[i][0]);
-            result.Add(new KeyValuePair<string, BoardSide>(right.ToString(),BoardSide.Right));
-            return result;
-        }
-
-        public bool IsNeirb(Tile other)
-        {
-            if (other == this) return false;
-            if (Neirb.ContainsValue(other))
-                return true;
-            var db = DownBoards();
-            var otherUp = other.UpBoards();
-            var otherDown = other.DownBoards();
-            for (var dIndex = 0; dIndex < db.Count; ++dIndex)
+            var result = new List<StringBuilder>();
+            for (var r = 0; r < Data.Count; ++r)
             {
-                for (var oU = 0; oU < otherUp.Count; ++oU)
-                    if (otherUp[oU].Key == db[dIndex].Key)
-                    {
-                        Neirb.Add(db[dIndex].Value, other);
-                        other.Neirb.Add(calcOtherSide(dIndex, db[dIndex].Value, oU),this);
-                        return true;
-                    }
-                for (var oD = 0; oD < otherDown.Count; ++oD)
-                    if (otherDown[oD].Key == db[dIndex].Key)
-                    {
-                        Neirb.Add(db[dIndex].Value, other);
-                        other.Neirb.Add(calcOtherSide(dIndex, db[dIndex].Value, oD), this);
-                        other.Flip = true;
-                        return true;
-                    }
+                var sb = new StringBuilder();
+
+                for (var c = 0; c < Data[0].Length; ++c)
+                    sb.Append(Data[c][Data[0].Length - r - 1]);
+                result.Add(sb);
             }
-            return false;
+            Data.Clear();
+            for (var i = 0; i < result.Count; ++i)
+                Data.Add(result[i].ToString());
         }
 
-        BoardSide calcOtherSide(int board, BoardSide side, int otherBoard)
+        void FlipVertical()
         {
-            throw new Exception("");
+            for (var r = 0; r < Data.Count / 2; ++r)
+            {
+                var t = Data[r];
+                Data[r] = Data[Data.Count - r - 1];
+                Data[Data.Count - r - 1] = t;
+            }
         }
 
-        int calcRotate()
+        public void FindNeighbours(List<Tile> tiles, int x = -1, int y = -1)
         {
-            return 0;
+            Show(x, y);
+            foreach (var t in tiles)
+            {
+                if (t == this)
+                    continue;
+                if (Neighbours.ContainsValue(t))
+                    continue;
+                var side = IsNeighbour(t);
+                if (side != BoardSide.None)
+                {
+                    if (x >= 0 && y >= 0)
+                    {
+                        t.FindNeighbours(tiles,
+                            x + (side == BoardSide.Left ? -1 : side == BoardSide.Right ? 1 : 0),
+                            y + (side == BoardSide.Up ? -1 : side == BoardSide.Down ? 1 : 0));
+                        Show(x, y);
+                    }
+                    else
+                        t.FindNeighbours(tiles);
+                }
+                if (Neighbours.Count == 4)
+                    break;
+            }
+        }
+
+        void Show(int x = -1, int y = -1)
+        {
+            if (x >= 0 && y >= 0)
+            {
+                Console.CursorLeft = x * 5;
+                Console.CursorTop = y;
+                var fc = Console.ForegroundColor;
+                Console.ForegroundColor =
+                    Neighbours.Count == 1 ? ConsoleColor.Yellow :
+                    Neighbours.Count == 2 ? ConsoleColor.Green :
+                    Neighbours.Count == 3 ? ConsoleColor.Magenta :
+                    Neighbours.Count == 4 ? ConsoleColor.Cyan : ConsoleColor.Red;
+                Console.Write(Id);
+                Console.ForegroundColor = fc;
+                Thread.Sleep(10);
+            }
+        }
+
+        BoardSide IsNeighbour(Tile other)
+        {
+            for (var f = 0; f < 2; ++f)
+            {
+                for (var r = 0; r < 4; ++r)
+                {
+                    if (CheckSide(other, BoardSide.Up))
+                    {
+                        Neighbours.Add(BoardSide.Up, other);
+                        other.Neighbours.Add(BoardSide.Down, this);
+                        return BoardSide.Up;
+                    }
+                    if (CheckSide(other, BoardSide.Down))
+                    {
+                        Neighbours.Add(BoardSide.Down, other);
+                        other.Neighbours.Add(BoardSide.Up, this);
+                        return BoardSide.Down;
+                    }
+                    if (CheckSide(other, BoardSide.Left))
+                    {
+                        Neighbours.Add(BoardSide.Left, other);
+                        other.Neighbours.Add(BoardSide.Right, this);
+                        return BoardSide.Left;
+                    }
+                    if (CheckSide(other, BoardSide.Right))
+                    {
+                        Neighbours.Add(BoardSide.Right, other);
+                        other.Neighbours.Add(BoardSide.Left, this);
+                        return BoardSide.Right;
+                    }
+                    if (other.Neighbours.Count > 0)// If other has neighbours, then can't rotate and flip other
+                        return BoardSide.None;
+                    other.Rotate();
+                }
+                other.FlipVertical();
+            }
+            return BoardSide.None;
+        }
+
+        bool CheckSide(Tile other, BoardSide side)
+        {
+            if (side == BoardSide.Down)
+                return other.Data[0] == Data[Data.Count - 1];
+            if (side == BoardSide.Up)
+                return other.Data[other.Data.Count - 1] == Data[0];
+            if (side == BoardSide.Left)
+                for (var r = 0; r < Data.Count; ++r)
+                    if (Data[r][0] != other.Data[r][other.Data.Count - 1])
+                        return false;
+            if (side == BoardSide.Right)
+                for (var r = 0; r < Data.Count; ++r)
+                    if (Data[r][Data.Count - 1] != other.Data[r][0])
+                        return false;
+            return true;
         }
 
         public void TrimBoards()
         {
             Data.RemoveAt(0);
             Data.RemoveAt(Data.Count - 1);
-            for (var i = 0; i < Data.Count - 1; ++i)
+            for (var i = 0; i < Data.Count; ++i)
                 Data[i] = Data[i].Substring(1, Data[i].Length - 2);
-        }
-
-        public void Transform()
-        {
-            var newData = new List<string>();
-            for (var row = 0; row < Data.Count; ++row)
-            {
-                var sb = new StringBuilder();
-                for (var col = 0; col < Data[0].Length; ++col)
-                    if (Flip)
-                    {
-
-                    }
-                    else
-                    {
-
-                    }
-                newData.Add(sb.ToString());
-            }
         }
 
         public void addTile(char[,] image, int x, int y)
         {
             for (var yData = 0; yData < Data.Count; ++yData)
                 for (var xData = 0; xData < Data[yData].Length; ++xData)
-                    image[y * Data.Count + yData,x * Data[0].Length + xData] = Data[yData][xData];
+                    if (image[x * Data[0].Length + xData, y * Data.Count + yData] != 'X')
+                        throw new Exception("Картинки наползают!");
+                    else
+                        image[x * Data[0].Length + xData, y * Data.Count + yData] = Data[yData][xData];
         }
 
         public bool isLeftUp()
         {
-            return !Neirb.ContainsKey(BoardSide.Up) && !Neirb.ContainsKey(BoardSide.Left);
+            return !Neighbours.ContainsKey(BoardSide.Up) && !Neighbours.ContainsKey(BoardSide.Left);
+        }
+
+        public int ways()
+        {
+            var result = 0;
+            for (var yData = 1; yData < Data.Count-1; ++yData)
+                for (var xData = 1; xData < Data[yData].Length-1; ++xData)
+                    result += Data[yData][xData] == '#' ? 1 : 0;
+            return result;
         }
     }
 
@@ -165,61 +204,87 @@ namespace AOC2020
             var two = PartTwo();
             Console.WriteLine($"partOne: {one} partTwo: {two}");
             if (Console.ReadKey().Key == ConsoleKey.Spacebar)
-                Clipboard.SetText(one.ToString());
+                Clipboard.SetText(two.ToString());
         }
 
         ulong PartOne()
         {
             ulong result = 1;
-            for (var i = 0; i < Tiles.Count-1; ++i)
-                for (var j = i+1; j < Tiles.Count; ++j)
-                    Tiles[i].IsNeirb(Tiles[j]);
-
+            Tiles[0].FindNeighbours(Tiles,15,15);
+            Console.CursorLeft = 0;
+            Console.CursorTop = 30;
             for (var i = 0; i < Tiles.Count; ++i)
-                if (Tiles[i].Neirb.Count == 2)
+                if (Tiles[i].Neighbours.Count == 2)
                     result *= Tiles[i].Id;
 
             return result;
         }
 
-        ulong PartTwo()
+        int PartTwo()
         {
-            ulong result = 0;
+            var w = 0;
+            foreach (var t in Tiles)
+                w += t.ways();
+            Console.WriteLine($"ways:{w}");
+
             var image = GetImage();
             var height = CalcHeight() * Tiles[0].Data.Count;
             var width = CalcWidth() * Tiles[0].Data[0].Length;
+            var pattern = File.ReadAllLines(@"Data\day20_monster.txt");
+            var monsters = CountMonster(image, pattern, width, height);
+
             Console.WriteLine("IMAGE:");
             for (var y = 0; y < height; ++y)
             {
-                for (var x = 0; x < height; ++x)
-                    Console.Write(image[x,y]);
-                Console.WriteLine();
+                Console.Write("|");
+                for (var x = 0; x < width; ++x)
+                {
+                    var cb = Console.BackgroundColor;
+                    var cf = Console.ForegroundColor;
+                    Console.ForegroundColor = (image[x, y] == 'O') 
+                        ? ConsoleColor.Red
+                        : (image[x, y] == '#')
+                        ? ConsoleColor.White
+                        : (image[x, y] == 'X')
+                        ? ConsoleColor.Yellow
+                        : ConsoleColor.Blue;
+                    Console.BackgroundColor = Console.ForegroundColor;
+                    Console.Write(image[x, y]);
+                    Console.BackgroundColor = cb;
+                    Console.ForegroundColor = cf;
+                }
+                Console.WriteLine("|");
             }
-                    return result;
+
+            return CalcWays(image, width, height);
         }
 
         char[,] GetImage()
         {
             for (var i = 0; i < Tiles.Count; ++i)
-            {
                 Tiles[i].TrimBoards();
-                Tiles[i].Transform();
-            }
             var height = CalcHeight();
             var width = CalcWidth();
             var result = new char[width * Tiles[0].Data[0].Length, height * Tiles[0].Data.Count];
+            for (var y = 0; y < height * Tiles[0].Data.Count; ++y)
+                for (var x = 0; x < width * Tiles[0].Data[0].Length; ++x)
+                    result[x, y] = 'X';
 
             var startRowTile = FindLeftUp();
-            for (var row = 0; row < height; ++row)
+            var row = 0;
+            do
             {
                 Tile currTile = startRowTile;
-                for (var col = 0; col < width; ++col)
+                var col = 0;
+                do
                 {
-                    currTile.addTile(result, row, col);
-                    currTile = currTile.Neirb[Tile.BoardSide.Right];
-                }
-                startRowTile = startRowTile.Neirb[Tile.BoardSide.Down];
-            }
+                    currTile.addTile(result, col, row);
+                    currTile = currTile.Neighbours.ContainsKey(Tile.BoardSide.Right) ? currTile.Neighbours[Tile.BoardSide.Right] : null;
+                    ++col;
+                } while (currTile != null);
+                startRowTile = startRowTile.Neighbours.ContainsKey(Tile.BoardSide.Down) ? startRowTile.Neighbours[Tile.BoardSide.Down] : null;
+                ++row;
+            } while (startRowTile != null);
             return result;
         }
 
@@ -234,11 +299,11 @@ namespace AOC2020
         int CalcWidth()
         {
             var tile = FindLeftUp();
-            var result = 0;
-            while(tile.Neirb.ContainsKey(Tile.BoardSide.Right))
+            var result = 1;
+            while (tile.Neighbours.ContainsKey(Tile.BoardSide.Right))
             {
                 ++result;
-                tile = tile.Neirb[Tile.BoardSide.Right];
+                tile = tile.Neighbours[Tile.BoardSide.Right];
             }
             return result;
         }
@@ -246,13 +311,80 @@ namespace AOC2020
         int CalcHeight()
         {
             var tile = FindLeftUp();
-            var result = 0;
-            while (tile.Neirb.ContainsKey(Tile.BoardSide.Down))
+            var result = 1;
+            while (tile.Neighbours.ContainsKey(Tile.BoardSide.Down))
             {
                 ++result;
-                tile = tile.Neirb[Tile.BoardSide.Down];
+                tile = tile.Neighbours[Tile.BoardSide.Down];
             }
             return result;
+        }
+
+        int CalcWays(char[,] image, int width, int height)
+        {
+            var result = 0;
+            for (var y = 0; y < height; ++y)
+                for (var x = 0; x < width; ++x)
+                    result += image[x, y] == '#' ? 1 : 0;
+            return result;
+        }
+
+        int CountMonster(char[,] image, string[] pattern, int width, int height)
+        {
+            for (var f = 0; f < 2; ++f)
+            {
+                for (var r = 0; r < 4; ++r)
+                {
+                    var currMonsters = 0;
+                    for (var row = 0; row <= height - pattern.Length; ++row)
+                        for (var col = 0; col <= width - pattern[0].Length; ++col)
+                        {
+                            if (ThereAreMonsterHere(image, col, row, pattern))
+                                ++currMonsters;
+                        }
+                    if (currMonsters > 0)
+                        return currMonsters;
+                    RotateImage(image, width, height);
+                }
+                FlipImage(image, width, height);
+            }
+            return 0;
+        }
+
+        bool ThereAreMonsterHere(char[,] image, int x, int y, string[] pattern)
+        {
+            for (var row = 0; row < pattern.Length; ++row)
+                for (var col = 0; col < pattern[0].Length; ++col)
+                    if (pattern[row][col] == '#' && image[x + col, y + row] != '#')
+                        return false;
+            for (var row = 0; row < pattern.Length; ++row)
+                for (var col = 0; col < pattern[0].Length; ++col)
+                    if (pattern[row][col] == '#')
+                        image[x + col, y + row] = 'O';
+            return true;
+        }
+
+        void RotateImage(char[,] image, int width, int height)
+        {
+            char[,] old = new char[width, height];
+            for (var y = 0; y < height; ++y)
+                for (var x = 0; x < width; ++x)
+                    old[x, y] = image[x, y];
+
+            for (var y = 0; y < height; ++y)
+                for (var x = 0; x < width; ++x)
+                    image[x, y] = old[width - y - 1, x];
+        }
+
+        void FlipImage(char[,] image, int width, int height)
+        {
+            for (var y = 0; y < height; ++y)
+                for (var x = 0; x < width / 2; ++x)
+                {
+                    var t = image[x, y];
+                    image[x, y] = image[width - x - 1, y];
+                    image[width - x - 1, y] = t;
+                }
         }
     }
 }
